@@ -1,6 +1,8 @@
 use core::traits::Into;
 use starknet::ContractAddress;
 
+use cairo_vote::verifier::{ZKOpeningProof, verify_opening};
+
 #[starknet::interface]
 trait StarkWolfTrait<T> {
     // global methods 
@@ -13,10 +15,10 @@ trait StarkWolfTrait<T> {
     // registration
     fn register(ref self: T, player_comm: u256); // NOTE: must have payment associated
     fn end_registration(ref self: T); // NOTE: has a payout associated with it
-// werewolf
-// fn eliminate(self: @T, player_addr: ContractAddress);
 
-// // voting
+    // werewolf elimination phase
+    fn eliminate(ref self: T, player_addr: ContractAddress, proof: ZKOpeningProof);
+// voting
 // fn vote_and_commit(self: @T, vote_addr: ContractAddress, next_round_comm: u256);
 // fn end_voting(self: @T); // NOTE: has a payout associated with it
 
@@ -28,7 +30,8 @@ trait StarkWolfTrait<T> {
 
 #[starknet::contract]
 mod StarkWolf {
-    use super::ContractAddress;
+    use super::{ContractAddress, ZKOpeningProof, verify_opening};
+
     use starknet::get_caller_address;
 
     use starknet::get_block_info;
@@ -54,7 +57,7 @@ mod StarkWolf {
     #[constructor]
     fn constructor(ref self: ContractState, init_owner: ContractAddress) {
         self.round_block_length.write(100); // NOTE: 3-4 hrs
-        self.registration_block_length.write(10);
+        // self.registration_block_length.write(10);
 
         self.round.write(0);
 
@@ -89,6 +92,15 @@ mod StarkWolf {
             );
 
             self.stage.write(1);
+        }
+
+        #[external]
+        fn eliminate(ref self: ContractState, player_addr: ContractAddress, proof: ZKOpeningProof) {
+            assert(self.stage.read() == 1, 'Not in elimination phase');
+
+            assert(verify_opening(proof), 'Invalid opening proof')
+        // TODO: check that proof msg corresponds to addr
+        // TODO: 
         }
     }
 }
