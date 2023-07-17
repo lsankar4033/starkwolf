@@ -9,3 +9,6 @@ starknet = "2.0.1"
 
 [[target.starknet-contract]]
 sierra = true
+
+[scripts]
+test = "cairo-test --single-file ./src/verifier.cairo"
