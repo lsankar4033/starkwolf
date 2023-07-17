@@ -1,5 +1,5 @@
+use core::traits::Into;
 use starknet::ContractAddress;
-
 
 #[starknet::interface]
 trait StarkWolfTrait<T> {
@@ -11,8 +11,8 @@ trait StarkWolfTrait<T> {
     // TODO: do we need anything here?
 
     // registration
-    fn register(self: @T, player_comm: u256); // NOTE: must have payment associated
-    fn end_registration(self: @T); // NOTE: has a payout associated with it
+    fn register(ref self: T, player_comm: u256); // NOTE: must have payment associated
+    fn end_registration(ref self: T); // NOTE: has a payout associated with it
 // werewolf
 // fn eliminate(self: @T, player_addr: ContractAddress);
 
@@ -34,37 +34,61 @@ mod StarkWolf {
     use starknet::get_block_info;
     use box::BoxTrait;
 
+    use array::ArrayTrait;
+
 
     #[storage]
     struct Storage {
-        round_block_length: u256,
+        round_block_length: u64,
+        registration_block_length: u64,
+        // TODO: block lengths for each phase
+
         round: u256,
-        round_start_block: u256, // TODO: presumably round length, etc. defined in constructor
-        round_start_blockhash: u256, // NOTE: for use in werewolf/tanner comps
+        round_start_block: u64, // TODO: presumably round length, etc. defined in constructor
+        round_start_ts: u64, // NOTE: for use in werewolf/tanner comps
         stage: u256,
-        player_comms: LegacyMap::<u256, u256>,
+        player_comms: LegacyMap::<ContractAddress, u256>,
     // NOTE: may want max_players in here too
     }
 
     #[constructor]
     fn constructor(ref self: ContractState, init_owner: ContractAddress) {
-        // self.round_block_length.write(100); // NOTE: 3-4 hrs
-        // self.round.write(0);
+        self.round_block_length.write(100); // NOTE: 3-4 hrs
+        self.registration_block_length.write(10);
+
+        self.round.write(0);
 
         let block_info = get_block_info().unbox();
-    // TODO: store block info in start_block, start_blockhash
+        self.round_start_block.write(block_info.block_number);
+        self.round_start_ts.write(block_info.block_timestamp);
+
+        self.stage.write(0);
     }
 
-    #[external(v0)]
     impl StarkWolfImpl of super::StarkWolfTrait<ContractState> {
-        fn register(
-            self: @ContractState, player_comm: u256
-        ) { // blockhash + time math to see if registration still open, get player comm in
+        #[external]
+        fn register(ref self: ContractState, player_comm: u256) {
+            // TODO: handle registration payment
+            assert(self.stage.read() == 0, 'Not in registration phase');
+
+            let addr = get_caller_address();
+
+            // TODO: check that commitment isn't double-used
+            self.player_comms.write(addr, player_comm)
         }
 
-        fn end_registration(
-            self: @ContractState
-        ) { // blockhash + time math to see if registration ready to close, close it
+        #[external]
+        fn end_registration(ref self: ContractState) {
+            // TODO: compensate caller
+            assert(self.stage.read() == 0, 'Not in registration phase');
+
+            assert(
+                get_block_info().unbox().block_number >= self.round_start_block.read()
+                    + self.registration_block_length.read(),
+                'Registration not over yet'
+            );
+
+            self.stage.write(1);
         }
     }
 }
