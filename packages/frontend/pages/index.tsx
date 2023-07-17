@@ -1,13 +1,23 @@
-import Head from "next/head";
-import { useBlock } from "@starknet-react/core";
-import WalletBar from "../components/WalletBar";
-import ContractTest from "@/components/ContractTest";
+import Head from 'next/head';
+import { useBlock } from '@starknet-react/core';
+import WalletBar from '../components/WalletBar';
+import ContractTest from '@/components/ContractTest';
+import { useActivate } from '@/hooks/useActivate';
+import { useContext } from 'react';
+import { PlayerContext } from './_app';
+import { IPlayerContext } from '@/types';
+import { useJoinGame } from '@/hooks/useJoinGame';
 
 export default function Home() {
   const { data, isLoading, isError } = useBlock({
     refetchInterval: 3000,
-    blockIdentifier: "latest",
+    blockIdentifier: 'latest',
   });
+
+  const { player, signIn } = useContext(PlayerContext) as IPlayerContext;
+  const { joinGame } = useJoinGame();
+  const { isActivated, activate } = useActivate(player?.pubKey);
+
   return (
     <>
       <Head>
@@ -23,14 +33,22 @@ export default function Home() {
         </p>
         <div>
           {isLoading
-            ? "Loading..."
+            ? 'Loading...'
             : isError
-            ? "Error while fetching the latest block hash"
+            ? 'Error while fetching the latest block hash'
             : `Latest block hash: ${data?.block_hash}`}
         </div>
         <WalletBar />
-
         <ContractTest />
+        <button onClick={signIn}>SignIn</button>
+        {isActivated ? <></> : <button onClick={activate}>Activate account</button>}
+        <button
+          onClick={() => {
+            joinGame(BigInt(0));
+          }}
+        >
+          Join game
+        </button>
       </main>
     </>
   );
