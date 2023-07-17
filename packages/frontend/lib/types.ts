@@ -30,7 +30,6 @@ export   type ZKInequalityProof = {
   };
   
 export   type Vote = {
-    targetPubKey: bigint;
     proof: ZKOpeningProof;
   };
   

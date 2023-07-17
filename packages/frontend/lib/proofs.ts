@@ -172,7 +172,6 @@ export const vote = (
   const proof = proveOpening(userPubKeyComm, userPubKey, r, targetPubKey, GENS);
 
   return {
-    targetPubKey,
     proof
   };
 };
