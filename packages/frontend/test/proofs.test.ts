@@ -11,14 +11,15 @@ describe("Test proofs", () => {
   const x = BigInt(3);
   const r = BigInt(2);
   const C = pedersenCommit(x, r, GENS);
+  const msg = BigInt(3333);
   describe("proveOpening", () => {
     it("should be able to prove opening", () => {
-      const proof = proveOpening(C, x, r, GENS);
+      const proof = proveOpening(C, x, r, msg, GENS);
       expect(verifyOpening(proof, GENS)).toBeTruthy();
     });
 
     it("should assert invalid opening proof", () => {
-      const proof = proveOpening(C, x, r, GENS);
+      const proof = proveOpening(C, x, r, msg,GENS);
       proof.z1 += BigInt(1);
       expect(verifyOpening(proof, GENS)).toBeFalsy();
     });

@@ -73,7 +73,7 @@ export const proveInequality = (
     alpha2,
     z1,
     z2,
-    xv
+    xv,
   };
 };
 
@@ -82,6 +82,7 @@ export const proveInequality = (
  * @param C Pedersen commitment to the user's public key (gens.g * x + gens.h * r)
  * @param x The user's public key
  * @param r Blinding factor in the commitment
+ * @param binder The message to bind to the proof
  * @param gens Pedersen commitment generators
  * @returns ZK opening proof
  */
@@ -89,6 +90,7 @@ export const proveOpening = (
   C: AffinePoint,
   x: bigint,
   r: bigint,
+  bindTo: bigint,
   gens: Gens
 ): ZKOpeningProof => {
   const t1 = randomFe();
@@ -96,7 +98,8 @@ export const proveOpening = (
 
   const alpha = gens.g.multiply(t1).add(gens.h.multiply(t2)).toAffine();
 
-  const c = pedersenHash(alpha.x, alpha.y);
+  const c1 = pedersenHash(alpha.x, alpha.y);
+  const c = pedersenHash(bindTo, c1);
 
   const cx = mulmod(c, x);
   const z1 = addmod(t1, cx);
@@ -108,7 +111,8 @@ export const proveOpening = (
     comm: C,
     alpha,
     z1,
-    z2
+    z2,
+    msg: bindTo
   };
 };
 
@@ -117,7 +121,8 @@ export const verifyOpening = (proof: ZKOpeningProof, gens: Gens): boolean => {
 
   const lhs = gens.g.multiply(z1).add(gens.h.multiply(z2)).toAffine();
 
-  const c = pedersenHash(alpha.x, alpha.y);
+  const c1 = pedersenHash(alpha.x, alpha.y);
+  const c = pedersenHash(proof.msg, c1);
 
   const rhs = ProjectivePoint.fromAffine(comm)
     .multiply(c)
@@ -164,7 +169,7 @@ export const vote = (
   targetPubKey: bigint
 ): Vote => {
   // Generate a proof that you know a public key that is a signature of the target public key
-  const proof = proveOpening(userPubKeyComm, userPubKey, r, GENS);
+  const proof = proveOpening(userPubKeyComm, userPubKey, r, targetPubKey, GENS);
 
   return {
     targetPubKey,

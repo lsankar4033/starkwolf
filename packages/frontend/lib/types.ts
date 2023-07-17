@@ -17,6 +17,7 @@ export   type ZKOpeningProof = {
     alpha: AffinePoint;
     z1: bigint;
     z2: bigint;
+    msg: bigint;
   };
   
 export   type ZKInequalityProof = {

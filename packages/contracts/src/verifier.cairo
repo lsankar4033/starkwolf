@@ -25,7 +25,8 @@ struct ZKOpeningProof {
     comm: AffinePoint,
     alpha: AffinePoint,
     z1: felt252,
-    z2: felt252
+    z2: felt252,
+    msg: felt252,
 }
 
 #[derive(Copy, Drop)]
@@ -70,7 +71,8 @@ fn verify_opening(proof: ZKOpeningProof) -> bool {
     let comm: EcPoint = proof.comm.into();
     let alpha: EcPoint = proof.alpha.into();
 
-    let c = pedersen(proof.alpha.x, proof.alpha.y);
+    let c1 = pedersen(proof.alpha.x, proof.alpha.y);
+    let c = pedersen(proof.msg, c1);
 
     let lhs = ec_mul(GENS_G(), proof.z1) + ec_mul(GENS_H(), proof.z2);
     let rhs = ec_mul(comm, c) + alpha;
@@ -107,15 +109,16 @@ mod test {
             y: 0xe67a0a63cc493225e45b9178a3375596ea2a1d7012628a328dbc14c78cd1b7
         };
         let alpha = AffinePoint {
-            x: 0x3a4eaa99c84a202fd970581ca4d4755b336141456d0ab9b32f5e10727f33a87,
-            y: 0x29bd5b6cb432c7d2bd48d3f8a37b06d5b8128b4e12bf3eeec72ca81c850503b
+            x: 0x483b1d140b680e1ebddb26a03a54ccf5f93f75e2eb9c6c0e323ebb40463c539,
+            y: 0x30252d6bfd5c1b16d60e4f6438be5111bbb1497acb434161cb71e395f6174b7
         };
 
         ZKOpeningProof {
             comm,
             alpha,
-            z1: 0x13b78fda4c9aef42275fdd186d8c7971afd1fca315aa2c2c1e3caa38a6c1ea7,
-            z2: 0xd250a9188674a2c1a3fe8baf3b2fba11fe1531763c6c81d697dc6d06f2c051,
+            z1: 0x1d69d233de0ddc5e2ece7eeab843a8251c492bd1aa83bae41910ab172f2c7ff,
+            z2: 0x68f136cd3eb3e8f41f34549c7ad7c56b0d918c743b549403ffa734cc07b6393,
+            msg: 0xd05,
         }
     }
 
