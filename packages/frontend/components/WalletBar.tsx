@@ -1,4 +1,4 @@
-import { useAccount, useConnectors } from '@starknet-react/core'
+import { useAccount, useConnectors,  } from '@starknet-react/core'
 import { useMemo } from 'react'
 
 function WalletConnected() {
