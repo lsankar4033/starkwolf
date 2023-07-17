@@ -14,13 +14,13 @@ const Gy: felt252 = 0x5668060aa49730b7be4801df46ec62de53ecd11abe43a32873000c36e8
 const Hx: felt252 = 0x759ca09377679ecd535a81e83039658bf40959283187c654c5416f439403cf5;
 const Hy: felt252 = 0x6f524a3400e7708d5c01a28598ad272e7455aa88778b19f93b562d7a9646c41;
 
-#[derive(Copy, Drop)]
+#[derive(Copy, Serde, Drop)]
 struct AffinePoint {
     x: felt252,
     y: felt252,
 }
 
-#[derive(Copy, Drop)]
+#[derive(Copy, Serde, Drop)]
 struct ZKOpeningProof {
     comm: AffinePoint,
     alpha: AffinePoint,
@@ -29,7 +29,7 @@ struct ZKOpeningProof {
     msg: felt252,
 }
 
-#[derive(Copy, Drop)]
+#[derive(Copy, Serde, Drop)]
 struct ZKInequalityProof {
     comm: AffinePoint,
     alpha1: AffinePoint,
